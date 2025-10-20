@@ -1,0 +1,3 @@
+dependencies:
+  ssd1306:
+    git: https://github.com/UncleRus/esp-idf-ssd1306.git
