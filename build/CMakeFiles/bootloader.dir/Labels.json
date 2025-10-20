@@ -2,34 +2,34 @@
 	"sources" : 
 	[
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/CMakeFiles/bootloader"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/CMakeFiles/bootloader"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/CMakeFiles/bootloader.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/CMakeFiles/bootloader.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/CMakeFiles/bootloader-complete.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/CMakeFiles/bootloader-complete.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
 		},
 		{
-			"file" : "/Users/manuhdezz/Documents/workspace/hito2/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+			"file" : "/Users/manuhdezz/workspace/hito5/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
 		}
 	],
 	"target" : 

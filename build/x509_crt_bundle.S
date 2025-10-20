@@ -1,4 +1,4 @@
-/* * Data converted from /Users/manuhdezz/Documents/workspace/hito2/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from /Users/manuhdezz/workspace/hito5/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 #if !defined (__APPLE__) && !defined (__linux__)

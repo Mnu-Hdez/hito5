@@ -23,6 +23,7 @@
 #include "esp_timer.h"
 #include "esp_system.h"
 #include "esp_rom_sys.h"
+#include "cJSON.h"
 
 // Incluir archivos HTML
 #include "html_forms.h"
@@ -52,9 +53,11 @@ typedef struct {
     char ap_password[32];
     char ap_ssid[32];
     
-    // MQTT
-    char mqtt_uri[64];
+    // MQTT - ThingsBoard
+    char mqtt_broker[64];
+    uint32_t mqtt_port;
     char mqtt_token[64];
+    char mqtt_telemetry_topic[64];
     
     // OLED
     uint8_t oled_address;
@@ -71,8 +74,10 @@ static app_config_t config = {
     .default_ssid = "SBC",
     .default_password = "SBCwifi$",
     .ap_password = "config123",
-    .mqtt_uri = "mqtt://demo.thingsboard.io",
+    .mqtt_broker = "demo.thingsboard.io",
+    .mqtt_port = 1883,
     .mqtt_token = "HGf7saV16hOPmVOmkTwb",
+    .mqtt_telemetry_topic = "v1/devices/me/telemetry",
     .oled_address = 0x3C,
     .i2c_sda_pin = 21,
     .i2c_scl_pin = 22
@@ -106,6 +111,7 @@ static void display_dht11_data(void);
 static void send_dht11_data(void);
 static bool wait_for_connection(bool check_wifi, bool check_mqtt, int timeout_ms);
 static void main_application_loop(void);
+static char* create_telemetry_json(void);
 
 // --- NVS Functions ---
 static esp_err_t save_wifi_config(void) {
@@ -250,6 +256,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         wifi_connected = false;
+        mqtt_connected = false; // MQTT también se desconecta cuando WiFi falla
+        
         wifi_event_sta_disconnected_t* event = (wifi_event_sta_disconnected_t*) event_data;
         ESP_LOGW(TAG, "WiFi desconectado. Razón: %d", event->reason);
         
@@ -268,6 +276,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "✅ WiFi CONECTADO - SSID: %s, IP: " IPSTR, 
                 config.wifi_ssid, IP2STR(&event->ip_info.ip));
+        
+        // Reiniciar MQTT cuando WiFi se reconecta
+        if (mqtt_client) {
+            ESP_LOGI(TAG, "🔄 Reiniciando conexión MQTT después de reconexión WiFi");
+            esp_mqtt_client_stop(mqtt_client);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            esp_mqtt_client_start(mqtt_client);
+        }
     }
 }
 
@@ -278,13 +294,16 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     
     switch (event->event_id) {
         case MQTT_EVENT_BEFORE_CONNECT:
-            ESP_LOGI(TAG, "🔄 MQTT intentando conectar...");
+            ESP_LOGI(TAG, "🔄 MQTT intentando conectar a %s:%d...", 
+                    config.mqtt_broker, config.mqtt_port);
             break;
             
         case MQTT_EVENT_CONNECTED:
             mqtt_connected = true;
             ESP_LOGI(TAG, "✅ MQTT CONECTADO a ThingsBoard!");
-            ESP_LOGI(TAG, "✅ Session present: %d", event->session_present);
+            ESP_LOGI(TAG, "   Broker: %s:%d", config.mqtt_broker, config.mqtt_port);
+            ESP_LOGI(TAG, "   Token: %s", config.mqtt_token);
+            ESP_LOGI(TAG, "   Session present: %d", event->session_present);
             break;
             
         case MQTT_EVENT_DISCONNECTED:
@@ -334,6 +353,7 @@ static void wifi_connect_sta(void) {
     ESP_LOGI(TAG, "   Delay Reintentos: %d ms", config.wifi_retry_delay_ms);
     
     wifi_connected = false;
+    mqtt_connected = false;
     current_retry_count = 0;
     esp_wifi_stop();
     vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -614,7 +634,11 @@ static void display_dht11_data(void) {
     u8g2_DrawStr(&u8g2, 10, 40, hum_str);
     
     if (wifi_connected) {
-        u8g2_DrawStr(&u8g2, 10, 60, mqtt_connected ? "MQTT: OK" : "WiFi: OK");
+        if (mqtt_connected) {
+            u8g2_DrawStr(&u8g2, 10, 60, "TB: CONECTADO");
+        } else {
+            u8g2_DrawStr(&u8g2, 10, 60, "TB: DESCONECTADO");
+        }
     } else {
         u8g2_DrawStr(&u8g2, 10, 60, "Modo AP");
     }
@@ -711,16 +735,44 @@ static bool read_dht11_data(void) {
     }
 }
 
-// --- Funciones MQTT ---
+// --- Crear JSON para telemetría (usando cJSON) ---
+static char* create_telemetry_json(void) {
+    cJSON *root = cJSON_CreateObject();
+    if (root == NULL) {
+        ESP_LOGE(TAG, "❌ Error creando objeto JSON");
+        return NULL;
+    }
+    
+    // Agregar datos de telemetría según formato ThingsBoard
+    cJSON_AddNumberToObject(root, "temperature", config.temperature);
+    cJSON_AddNumberToObject(root, "humidity", config.humidity);
+    
+    // Convertir a string
+    char *json_string = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    
+    return json_string;
+}
+
+// --- Funciones MQTT para ThingsBoard ---
 static esp_err_t init_mqtt(void) {
-    ESP_LOGI(TAG, "🔌 Inicializando MQTT...");
-    ESP_LOGI(TAG, "   URI: %s", config.mqtt_uri);
+    ESP_LOGI(TAG, "🔌 Inicializando MQTT para ThingsBoard...");
+    ESP_LOGI(TAG, "   Broker: %s:%d", config.mqtt_broker, config.mqtt_port);
     ESP_LOGI(TAG, "   Token: %s", config.mqtt_token);
+    ESP_LOGI(TAG, "   Topic: %s", config.mqtt_telemetry_topic);
+    
+    // Construir URI MQTT completa
+    char mqtt_uri[100];
+    snprintf(mqtt_uri, sizeof(mqtt_uri), "mqtt://%s:%d", config.mqtt_broker, config.mqtt_port);
     
     esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = config.mqtt_uri,
-        .credentials.username = config.mqtt_token,
+        .broker.address.uri = mqtt_uri,
+        .credentials.username = config.mqtt_token,  // ThingsBoard usa el token como username
         .session.keepalive = 60,
+        .network.disable_auto_reconnect = false,
+        .network.reconnect_timeout_ms = 5000,
+        .task.stack_size = 6144,
+        .buffer.size = 2048,
     };
     
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
@@ -755,34 +807,34 @@ static void send_dht11_data(void) {
         return;
     }
     
-    // Crear payload JSON
-    char payload[100];
-    int len = snprintf(payload, sizeof(payload), 
-                      "{\"temperatura\": %.1f, \"humedad\": %.1f}", 
-                      config.temperature, config.humidity);
-    
-    if (len >= sizeof(payload)) {
-        ESP_LOGE(TAG, "❌ Payload demasiado grande");
+    // Crear payload JSON usando cJSON
+    char *payload = create_telemetry_json();
+    if (payload == NULL) {
+        ESP_LOGE(TAG, "❌ Error creando payload JSON");
         return;
     }
     
-    ESP_LOGI(TAG, "📤 ENVIANDO: %s", payload);
-    ESP_LOGI(TAG, "📤 TOPIC: v1/devices/me/telemetry");
+    ESP_LOGI(TAG, "📤 ENVIANDO a ThingsBoard:");
+    ESP_LOGI(TAG, "   Topic: %s", config.mqtt_telemetry_topic);
+    ESP_LOGI(TAG, "   Payload: %s", payload);
     
-    // Enviar con timeout más largo
+    // Enviar telemetría a ThingsBoard
     int msg_id = esp_mqtt_client_publish(mqtt_client, 
-                                        "v1/devices/me/telemetry",
+                                        config.mqtt_telemetry_topic,
                                         payload, 
-                                        0,  // QoS 0
-                                        1,  // Retain
-                                        5000); // Timeout 5 segundos
+                                        0,  // QoS 0 (ThingsBoard recomienda QoS 1 para mensajes críticos)
+                                        0,  // No retain
+                                        10000); // Timeout 10 segundos
+    
+    // Liberar memoria del JSON
+    cJSON_free(payload);
     
     if (msg_id == -1) {
-        ESP_LOGE(TAG, "❌ ERROR CRÍTICO: No se pudo publicar mensaje");
+        ESP_LOGE(TAG, "❌ ERROR CRÍTICO: No se pudo publicar mensaje MQTT");
         ESP_LOGE(TAG, "   - Posible falta de memoria");
         ESP_LOGE(TAG, "   - O conexión MQTT perdida");
     } else {
-        ESP_LOGI(TAG, "✅ MENSAJE ENVIADO - msg_id: %d", msg_id);
+        ESP_LOGI(TAG, "✅ TELEMETRÍA ENVIADA - msg_id: %d", msg_id);
         ESP_LOGI(TAG, "✅ Temp: %.1f°C, Hum: %.1f%%", 
                 config.temperature, config.humidity);
     }
@@ -815,15 +867,15 @@ static bool wait_for_connection(bool check_wifi, bool check_mqtt, int timeout_ms
 
 // --- Bucle principal de aplicación ---
 static void main_application_loop(void) {
-    ESP_LOGI(TAG, "🚀 Iniciando aplicación principal DHT11");
+    ESP_LOGI(TAG, "🚀 Iniciando aplicación principal DHT11 + ThingsBoard");
     
-    // Inicializar MQTT
+    // Inicializar MQTT para ThingsBoard
     if (init_mqtt() != ESP_OK) {
         ESP_LOGE(TAG, "❌ Error inicializando MQTT, modo local solamente");
     }
     
     // Esperar conexión MQTT con más tiempo
-    ESP_LOGI(TAG, "⏳ Esperando conexión MQTT (máximo 30 segundos)...");
+    ESP_LOGI(TAG, "⏳ Esperando conexión MQTT a ThingsBoard (máximo 30 segundos)...");
     int mqtt_timeout = 0;
     while (!mqtt_connected && mqtt_timeout < 30000) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -837,7 +889,7 @@ static void main_application_loop(void) {
         ESP_LOGW(TAG, "⚠️ MQTT no conectado después de 30 segundos");
         ESP_LOGW(TAG, "⚠️ Continuando en modo local sin ThingsBoard");
     } else {
-        ESP_LOGI(TAG, "🎉 MQTT CONECTADO - Iniciando envío de datos");
+        ESP_LOGI(TAG, "🎉 MQTT CONECTADO - Iniciando envío de telemetría a ThingsBoard");
     }
     
     // Bucle principal
@@ -855,6 +907,12 @@ static void main_application_loop(void) {
             } else {
                 ESP_LOGW(TAG, "📊 Datos locales - Temp: %.1f°C, Hum: %.1f%%", 
                         config.temperature, config.humidity);
+                
+                // Intentar reconectar MQTT si está desconectado
+                if (wifi_connected && !mqtt_connected) {
+                    ESP_LOGI(TAG, "🔄 Intentando reconexión MQTT...");
+                    esp_mqtt_client_reconnect(mqtt_client);
+                }
             }
         } else {
             ESP_LOGE(TAG, "❌ Error leyendo sensor DHT11");
@@ -868,7 +926,7 @@ static void main_application_loop(void) {
 
 // --- Función principal ---
 void app_main(void) {
-    ESP_LOGI(TAG, "🔧 Inicializando sistema ESP32 DHT11...");
+    ESP_LOGI(TAG, "🔧 Inicializando sistema ESP32 DHT11 + ThingsBoard...");
     
     // 1. Inicialización de sistemas básicos
     ESP_ERROR_CHECK(nvs_flash_init());

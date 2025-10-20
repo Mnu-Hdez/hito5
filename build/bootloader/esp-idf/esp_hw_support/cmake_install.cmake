@@ -39,11 +39,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/manuhdezz/Documents/workspace/hito2/build/bootloader/esp-idf/esp_hw_support/port/esp32/cmake_install.cmake")
+  include("/Users/manuhdezz/workspace/hito5/build/bootloader/esp-idf/esp_hw_support/port/esp32/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/manuhdezz/Documents/workspace/hito2/build/bootloader/esp-idf/esp_hw_support/lowpower/cmake_install.cmake")
+  include("/Users/manuhdezz/workspace/hito5/build/bootloader/esp-idf/esp_hw_support/lowpower/cmake_install.cmake")
 endif()
 

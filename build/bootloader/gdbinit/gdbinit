@@ -1,2 +1,2 @@
-source /Users/manuhdezz/Documents/workspace/hito2/build/bootloader/gdbinit/symbols
-source /Users/manuhdezz/Documents/workspace/hito2/build/bootloader/gdbinit/connect
+source /Users/manuhdezz/workspace/hito5/build/bootloader/gdbinit/symbols
+source /Users/manuhdezz/workspace/hito5/build/bootloader/gdbinit/connect

@@ -1,4 +1,4 @@
-# Install script for directory: /Users/manuhdezz/Documents/workspace/hito2/main
+# Install script for directory: /Users/manuhdezz/workspace/hito5/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

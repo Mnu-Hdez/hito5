@@ -22,4 +22,4 @@ set confirm off
 set confirm on
 
 # Load application symbols
-file /Users/manuhdezz/Documents/workspace/hito2/build/bootloader/bootloader.elf
+file /Users/manuhdezz/workspace/hito5/build/bootloader/bootloader.elf

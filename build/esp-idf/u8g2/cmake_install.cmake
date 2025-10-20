@@ -1,4 +1,4 @@
-# Install script for directory: /Users/manuhdezz/Documents/workspace/hito2/components/u8g2
+# Install script for directory: /Users/manuhdezz/workspace/hito5/components/u8g2
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -6,7 +6,7 @@
 # It is included in the main 'build.ninja'.
 
 # =============================================================================
-# Project: hito2
+# Project: hito5
 # Configurations: 
 # =============================================================================
 # =============================================================================
@@ -14,7 +14,7 @@
 #############################################
 # Rule for compiling C files.
 
-rule C_COMPILER__hito2.2eelf_unscanned_
+rule C_COMPILER__hito5.2eelf_unscanned_
   depfile = $DEP_FILE
   deps = gcc
   command = ${LAUNCHER}${CODE_CHECK}/Users/manuhdezz/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -24,7 +24,7 @@ rule C_COMPILER__hito2.2eelf_unscanned_
 #############################################
 # Rule for linking CXX executable.
 
-rule CXX_EXECUTABLE_LINKER__hito2.2eelf_
+rule CXX_EXECUTABLE_LINKER__hito5.2eelf_
   command = $PRE_LINK && /Users/manuhdezz/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32-elf-g++ $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
   description = Linking CXX executable $TARGET_FILE
   restat = $RESTAT
@@ -1860,7 +1860,7 @@ rule C_STATIC_LIBRARY_LINKER____idf_u8g2_
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = /Users/manuhdezz/.espressif/tools/cmake/3.30.2/CMake.app/Contents/bin/cmake --regenerate-during-build -S/Users/manuhdezz/Documents/workspace/hito2 -B/Users/manuhdezz/Documents/workspace/hito2/build
+  command = /Users/manuhdezz/.espressif/tools/cmake/3.30.2/CMake.app/Contents/bin/cmake --regenerate-during-build -S/Users/manuhdezz/workspace/hito5 -B/Users/manuhdezz/workspace/hito5/build
   description = Re-running CMake...
   generator = 1
 

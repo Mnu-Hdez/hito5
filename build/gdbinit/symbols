@@ -18,8 +18,8 @@ end
 
 # Load bootloader symbols
 set confirm off
-    add-symbol-file /Users/manuhdezz/Documents/workspace/hito2/build/bootloader/bootloader.elf
+    add-symbol-file /Users/manuhdezz/workspace/hito5/build/bootloader/bootloader.elf
 set confirm on
 
 # Load application symbols
-file /Users/manuhdezz/Documents/workspace/hito2/build/hito2.elf
+file /Users/manuhdezz/workspace/hito5/build/hito5.elf
