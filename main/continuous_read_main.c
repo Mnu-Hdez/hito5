@@ -294,16 +294,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     
     switch (event->event_id) {
         case MQTT_EVENT_BEFORE_CONNECT:
-            ESP_LOGI(TAG, "🔄 MQTT intentando conectar a %s:%d...", 
-                    config.mqtt_broker, config.mqtt_port);
+            ESP_LOGI(TAG, "🔄 MQTT intentando conectar a %s:%" PRIu32 "...", 
+            config.mqtt_broker, config.mqtt_port);
             break;
             
         case MQTT_EVENT_CONNECTED:
             mqtt_connected = true;
             ESP_LOGI(TAG, "✅ MQTT CONECTADO a ThingsBoard!");
-            ESP_LOGI(TAG, "   Broker: %s:%d", config.mqtt_broker, config.mqtt_port);
-            ESP_LOGI(TAG, "   Token: %s", config.mqtt_token);
-            ESP_LOGI(TAG, "   Session present: %d", event->session_present);
+            ESP_LOGI(TAG, "   Broker: %s:%" PRIu32, config.mqtt_broker, config.mqtt_port);
             break;
             
         case MQTT_EVENT_DISCONNECTED:
@@ -757,17 +755,18 @@ static char* create_telemetry_json(void) {
 // --- Funciones MQTT para ThingsBoard ---
 static esp_err_t init_mqtt(void) {
     ESP_LOGI(TAG, "🔌 Inicializando MQTT para ThingsBoard...");
-    ESP_LOGI(TAG, "   Broker: %s:%d", config.mqtt_broker, config.mqtt_port);
+    ESP_LOGI(TAG, "   Broker: %s:%" PRIu32, config.mqtt_broker, config.mqtt_port);
     ESP_LOGI(TAG, "   Token: %s", config.mqtt_token);
     ESP_LOGI(TAG, "   Topic: %s", config.mqtt_telemetry_topic);
     
-    // Construir URI MQTT completa
+    // Construir URI MQTT completa - CORREGIDO
     char mqtt_uri[100];
-    snprintf(mqtt_uri, sizeof(mqtt_uri), "mqtt://%s:%d", config.mqtt_broker, config.mqtt_port);
+    snprintf(mqtt_uri, sizeof(mqtt_uri), "mqtt://%s:%" PRIu32, config.mqtt_broker, config.mqtt_port);
     
+    // El resto del código permanece igual...
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri = mqtt_uri,
-        .credentials.username = config.mqtt_token,  // ThingsBoard usa el token como username
+        .credentials.username = config.mqtt_token,
         .session.keepalive = 60,
         .network.disable_auto_reconnect = false,
         .network.reconnect_timeout_ms = 5000,

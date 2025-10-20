@@ -1,7 +1,7 @@
 {
     "version":            "1.2",
     "project_name":       "hito5",
-    "project_version":    "907a10b-dirty",
+    "project_version":    "8a4b8aa-dirty",
     "project_path":       "/Users/manuhdezz/workspace/hito5",
     "idf_path":           "/Users/manuhdezz/esp/v5.5.1/esp-idf",
     "build_dir":          "/Users/manuhdezz/workspace/hito5/build",
